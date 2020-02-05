@@ -12,6 +12,7 @@
     state: started
     restart: yes
     restart_policy: unless-stopped
+    networks_cli_compatible: yes
     networks:
       - name: "{{ docker_pihole_network | default('bridge') }}"
         ipv4_address: "{{ docker_pihole_ipv4_address }}"
