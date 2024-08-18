@@ -1,9 +1,40 @@
 ---
+- name: "Create {{ docker_pihole_network }}"
+  community.docker.docker_network:
+    name: "{{ docker_pihole_network }}"
+    driver: bridge
 
 - name: "Set the __docker_pihole_admin_password fact"
   set_fact:
     __docker_pihole_random_password: "{{ lookup('password', '/dev/null chars=ascii_letters,digits') }}"
     __docker_pihole_admin_password: "{{ docker_pihole_admin_password | default(__docker_pihole_random_password) }}"
+
+- name: "[docker] Setup the pi-hole docker container with Traefik"
+  docker_container:
+    name: "{{ docker_pihole_container_name }}"
+    image: "{{ docker_pihole_image_name }}"
+    state: started
+    restart: yes
+    restart_policy: unless-stopped
+    networks_cli_compatible: yes
+    networks:
+      - name: "{{ docker_pihole_network | default('bridge') }}"
+    purge_networks: "{{ docker_pihole_purge_networks }}"
+    volumes: "{{ docker_pihole_volumes }}"
+    env:
+      TZ: "{{ docker_pihole_timezone }}"
+      ServerIP: "{{ docker_pihole_ipv4_address }}"
+      INTERFACE: "{{ docker_pihole_network_interface }}"
+      WEBPASSWORD: "{{ __docker_pihole_admin_password }}"
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.trilium.rule: "(Host(`{{ traefik_pihole_host }}`))"
+      traefik.http.routers.trilium.entrypoints: "websecure"
+      traefik.http.routers.trilium.tls: "true"
+      traefik.http.routers.trilium.tls.certresolver: "production"
+    capabilities: NET_ADMIN
+    dns_servers: "{{ docker_pihole_dns_servers }}"
+  when: docker_pihole_traefik
 
 - name: "[docker] Setup the pi-hole docker container"
   docker_container:
@@ -25,6 +56,7 @@
       WEBPASSWORD: "{{ __docker_pihole_admin_password }}"
     capabilities: NET_ADMIN
     dns_servers: "{{ docker_pihole_dns_servers }}"
+  when: not docker_pihole_traefik
 
 - name: Setup custom hosts
   include_tasks: custom_hosts.yml

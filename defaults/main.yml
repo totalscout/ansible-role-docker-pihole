@@ -30,3 +30,6 @@ docker_pihole_dns_custom_hosts_dnsmasq_conf_path: "{{ docker_pihole_host_dir_dns
 docker_pihole_dns_servers:
   - "127.0.0.1"
   - "1.1.1.1"
+
+docker_pihole_traefik: true
+docker_pihole_traefik_host: "pihole5.duckdns.org"
