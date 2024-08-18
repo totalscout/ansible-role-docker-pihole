@@ -19,6 +19,9 @@
     networks_cli_compatible: yes
     networks:
       - name: "{{ docker_pihole_network | default('bridge') }}"
+    ports:
+      - 53:53/udp
+      - 53:53/tcp
     purge_networks: "{{ docker_pihole_purge_networks }}"
     volumes: "{{ docker_pihole_volumes }}"
     env:
@@ -28,10 +31,13 @@
       WEBPASSWORD: "{{ __docker_pihole_admin_password }}"
     labels:
       traefik.enable: "true"
-      traefik.http.routers.trilium.rule: "(Host(`{{ traefik_pihole_host }}`))"
-      traefik.http.routers.trilium.entrypoints: "websecure"
-      traefik.http.routers.trilium.tls: "true"
-      traefik.http.routers.trilium.tls.certresolver: "production"
+      traefik.http.routers.pihole.rule: "(Host(`{{ docker_pihole_traefik_host }}`))"
+      traefik.http.routers.pihole.entrypoints: "websecure"
+      traefik.http.routers.pihole.tls: "true"
+      traefik.http.routers.pihole.tls.certresolver: "production"
+      traefik.http.routers.pihole.tls.domains[0].main: "{{ docker_pihole_traefik_host }}"
+      traefik.http.routers.pihole.tls.domains[0].sans: "{{ docker_pihole_traefik_host }}"
+      traefik.http.services.pihole.loadbalancer.server.port: "80"
     capabilities: NET_ADMIN
     dns_servers: "{{ docker_pihole_dns_servers }}"
   when: docker_pihole_traefik

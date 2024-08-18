@@ -5,10 +5,10 @@ docker_pihole_image_name: pihole/pihole:latest
 
 docker_pihole_network: bridge
 docker_pihole_network_interface: "eth0"
-docker_pihole_ipv4_address: 192.168.1.100
+docker_pihole_ipv4_address: "{{ ansible_default_ipv4.address }}"
 docker_pihole_purge_networks: yes
 
-docker_pihole_admin_password:
+docker_pihole_admin_password: "{{ pihole_password }}"
 
 docker_pihole_host_dir_dnsmasqd: /etc/dnsmasq.d/
 docker_pihole_host_dir_pihole: /etc/pihole/
