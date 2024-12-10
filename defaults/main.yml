@@ -3,7 +3,8 @@
 docker_pihole_container_name: pihole
 docker_pihole_image_name: pihole/pihole:latest
 
-docker_pihole_network: bridge
+docker_pihole_networks: 
+ - name: pi_net
 docker_pihole_network_interface: "eth0"
 docker_pihole_ipv4_address: "{{ ansible_default_ipv4.address }}"
 docker_pihole_purge_networks: yes

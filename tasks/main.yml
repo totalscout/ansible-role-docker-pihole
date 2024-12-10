@@ -1,8 +1,9 @@
 ---
-- name: "Create {{ docker_pihole_network }}"
+- name: "Create docker_pihole_networks"
   community.docker.docker_network:
-    name: "{{ docker_pihole_network }}"
+    name: "{{ item.name }}"
     driver: bridge
+  with_items: "{{ docker_pihole_networks }}"
 
 - name: "Set the __docker_pihole_admin_password fact"
   set_fact:
@@ -17,8 +18,7 @@
     restart: yes
     restart_policy: unless-stopped
     networks_cli_compatible: yes
-    networks:
-      - name: "{{ docker_pihole_network | default('bridge') }}"
+    networks: "{{ docker_pihole_networks }}"
     ports:
       - 53:53/udp
       - 53:53/tcp
