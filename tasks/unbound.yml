@@ -2,3 +2,15 @@
   community.docker.docker_network:
     name: "{{ unbound_net_name }}"
     driver: bridge
+    ipam:
+      config: "{{ unbound_net_config }}"
+
+- name: Setup unbound
+  community.docker.docker_container:
+    name: unbound
+    image: alpinelinux/unbound:latest
+    driver: bridge
+    networks:
+      - name: "{{ unbound_net | default('bridge') }}"
+        ipv4_address: "{{ unbound_ip }}"
+    restart_policy: unless-stopped

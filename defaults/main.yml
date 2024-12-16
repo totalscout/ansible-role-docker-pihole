@@ -7,7 +7,6 @@ docker_pihole_networks:
  - name: pi_net
 docker_pihole_network_interface: "eth0"
 docker_pihole_ipv4_address: "{{ ansible_default_ipv4.address }}"
-docker_pihole_purge_networks: yes
 
 docker_pihole_admin_password: changeme
 
@@ -35,3 +34,8 @@ docker_pihole_traefik_host: "pihole5.duckdns.org"
 
 docker_pihole_unbound: false
 unbound_ip: "172.200.200.2"
+unbound_net_config:
+  - subnet: 172.200.200.0/24
+    gateway: 172.200.200.1
+    ip_range: 172.200.200.2/24 # 192.168.1.5 and 192.168.1.6
+unbound_net_name: "unbound_net"

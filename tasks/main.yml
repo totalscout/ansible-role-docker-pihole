@@ -1,14 +1,19 @@
 ---
+- name: Append an unbound network to the pihele networks list
+  set_fact:
+    docker_pihole_networks: "{{ docker_pihole_networks | combine({'name': '{{ unbound_net_name }}'}) }}"
+  when: docker_pihole_unbound
+
 - name: "Create docker_pihole_networks"
   community.docker.docker_network:
     name: "{{ item.name }}"
     driver: bridge
   with_items: "{{ docker_pihole_networks }}"
 
-- name: "Set the __docker_pihole_admin_password fact"
-  set_fact:
-    __docker_pihole_random_password: "{{ lookup('password', '/dev/null chars=ascii_letters,digits') }}"
-    __docker_pihole_admin_password: "{{ docker_pihole_admin_password | default(__docker_pihole_random_password) }}"
+#- name: "Set the __docker_pihole_admin_password fact"
+#  set_fact:
+#    __docker_pihole_random_password: "{{ lookup('password', '/dev/null chars=ascii_letters,digits') }}"
+#    __docker_pihole_admin_password: "{{ docker_pihole_admin_password | default(__docker_pihole_random_password) }}"
 
 - name: "[docker] Setup the pi-hole docker container with Traefik and Unbound"
   docker_container:
@@ -28,7 +33,7 @@
       TZ: "{{ docker_pihole_timezone }}"
       ServerIP: "{{ docker_pihole_ipv4_address }}"
       INTERFACE: "{{ docker_pihole_network_interface }}"
-      WEBPASSWORD: "{{ __docker_pihole_admin_password }}"
+      WEBPASSWORD: "{{ docker_pihole_admin_password }}"
       PIHOLE_DNS_: "{{ docker_pihole_dns_servers }};{{ unbound_ip }}"
     labels:
       traefik.enable: "true"
@@ -61,7 +66,7 @@
       TZ: "{{ docker_pihole_timezone }}"
       ServerIP: "{{ docker_pihole_ipv4_address }}"
       INTERFACE: "{{ docker_pihole_network_interface }}"
-      WEBPASSWORD: "{{ __docker_pihole_admin_password }}"
+      WEBPASSWORD: "{{ docker_pihole_admin_password }}"
       PIHOLE_DNS_: "{{ docker_pihole_dns_servers }}"
     labels:
       traefik.enable: "true"
@@ -93,7 +98,7 @@
       TZ: "{{ docker_pihole_timezone }}"
       ServerIP: "{{ docker_pihole_ipv4_address }}"
       INTERFACE: "{{ docker_pihole_network_interface }}"
-      WEBPASSWORD: "{{ __docker_pihole_admin_password }}"
+      WEBPASSWORD: "{{ docker_pihole_admin_password }}"
       PIHOLE_DNS_: "{{ docker_pihole_dns_servers }}"
     capabilities: NET_ADMIN
     dns_servers: "{{ docker_pihole_dns_servers }}"
