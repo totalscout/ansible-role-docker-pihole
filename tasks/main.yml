@@ -10,6 +10,39 @@
     __docker_pihole_random_password: "{{ lookup('password', '/dev/null chars=ascii_letters,digits') }}"
     __docker_pihole_admin_password: "{{ docker_pihole_admin_password | default(__docker_pihole_random_password) }}"
 
+- name: "[docker] Setup the pi-hole docker container with Traefik and Unbound"
+  docker_container:
+    name: "{{ docker_pihole_container_name }}"
+    image: "{{ docker_pihole_image_name }}"
+    state: started
+    restart: yes
+    restart_policy: unless-stopped
+    networks_cli_compatible: yes
+    networks: "{{ docker_pihole_networks }}"
+    ports:
+      - 53:53/udp
+      - 53:53/tcp
+    purge_networks: "{{ docker_pihole_purge_networks }}"
+    volumes: "{{ docker_pihole_volumes }}"
+    env:
+      TZ: "{{ docker_pihole_timezone }}"
+      ServerIP: "{{ docker_pihole_ipv4_address }}"
+      INTERFACE: "{{ docker_pihole_network_interface }}"
+      WEBPASSWORD: "{{ __docker_pihole_admin_password }}"
+      PIHOLE_DNS_: "{{ docker_pihole_dns_servers }};{{ unbound_ip }}"
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.pihole.rule: "(Host(`{{ docker_pihole_traefik_host }}`))"
+      traefik.http.routers.pihole.entrypoints: "websecure"
+      traefik.http.routers.pihole.tls: "true"
+      traefik.http.routers.pihole.tls.certresolver: "production"
+      traefik.http.routers.pihole.tls.domains[0].main: "{{ docker_pihole_traefik_host }}"
+      traefik.http.routers.pihole.tls.domains[0].sans: "{{ docker_pihole_traefik_host }}"
+      traefik.http.services.pihole.loadbalancer.server.port: "80"
+    capabilities: NET_ADMIN
+    dns_servers: "{{ docker_pihole_dns_servers }}"
+  when: (docker_pihole_traefik == true) and (docker_pihole_unbound == true)
+
 - name: "[docker] Setup the pi-hole docker container with Traefik"
   docker_container:
     name: "{{ docker_pihole_container_name }}"
@@ -29,6 +62,7 @@
       ServerIP: "{{ docker_pihole_ipv4_address }}"
       INTERFACE: "{{ docker_pihole_network_interface }}"
       WEBPASSWORD: "{{ __docker_pihole_admin_password }}"
+      PIHOLE_DNS_: "{{ docker_pihole_dns_servers }}"
     labels:
       traefik.enable: "true"
       traefik.http.routers.pihole.rule: "(Host(`{{ docker_pihole_traefik_host }}`))"
@@ -40,7 +74,7 @@
       traefik.http.services.pihole.loadbalancer.server.port: "80"
     capabilities: NET_ADMIN
     dns_servers: "{{ docker_pihole_dns_servers }}"
-  when: docker_pihole_traefik
+  when: (docker_pihole_traefik == true) and (docker_pihole_unbound == false)
 
 - name: "[docker] Setup the pi-hole docker container"
   docker_container:
@@ -60,6 +94,7 @@
       ServerIP: "{{ docker_pihole_ipv4_address }}"
       INTERFACE: "{{ docker_pihole_network_interface }}"
       WEBPASSWORD: "{{ __docker_pihole_admin_password }}"
+      PIHOLE_DNS_: "{{ docker_pihole_dns_servers }}"
     capabilities: NET_ADMIN
     dns_servers: "{{ docker_pihole_dns_servers }}"
   when: not docker_pihole_traefik
@@ -67,3 +102,6 @@
 - name: Setup custom hosts
   include_tasks: custom_hosts.yml
   when: docker_pihole_dns_custom_hosts | length > 0
+
+- name: Setup unbound container
+  when: docker_pihole_unbound

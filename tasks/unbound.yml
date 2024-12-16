@@ -1,0 +1,4 @@
+- name: "Create network for unbound"
+  community.docker.docker_network:
+    name: "{{ unbound_net_name }}"
+    driver: bridge
