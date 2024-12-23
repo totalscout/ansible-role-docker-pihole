@@ -1,16 +1,21 @@
 - name: "Create network for unbound"
   community.docker.docker_network:
-    name: "{{ unbound_net_name }}"
+    name: "{{ unbound_net }}"
     driver: bridge
-    ipam:
-      config: "{{ unbound_net_config }}"
+    ipam_config: "{{ unbound_net_config }}"
 
-- name: Setup unbound
+- name: Append an unbound network to the pihele networks list
+  set_fact:
+    docker_pihole_networks: "{{ docker_pihole_networks + [{'name': unbound_net}]}}"
+  when: docker_pihole_unbound
+
+- name: Setup unbound container
   community.docker.docker_container:
     name: unbound
-    image: alpinelinux/unbound:latest
-    driver: bridge
+    image: mvance/unbound:latest
     networks:
       - name: "{{ unbound_net | default('bridge') }}"
         ipv4_address: "{{ unbound_ip }}"
     restart_policy: unless-stopped
+    volumes:
+      - /etc/unbound:/opt/unbound/etc/unbound/

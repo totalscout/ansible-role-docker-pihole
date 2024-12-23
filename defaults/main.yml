@@ -33,9 +33,9 @@ docker_pihole_traefik: true
 docker_pihole_traefik_host: "pihole5.duckdns.org"
 
 docker_pihole_unbound: false
-unbound_ip: "172.200.200.2"
+unbound_ip: "172.200.200.5"
 unbound_net_config:
   - subnet: 172.200.200.0/24
     gateway: 172.200.200.1
-    ip_range: 172.200.200.2/24 # 192.168.1.5 and 192.168.1.6
-unbound_net_name: "unbound_net"
+    iprange: 172.200.200.2/24 # 192.168.1.5 and 192.168.1.6
+unbound_net: "unbound_net"

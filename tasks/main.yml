@@ -1,14 +1,13 @@
 ---
-- name: Append an unbound network to the pihele networks list
-  set_fact:
-    docker_pihole_networks: "{{ docker_pihole_networks | combine({'name': '{{ unbound_net_name }}'}) }}"
-  when: docker_pihole_unbound
-
 - name: "Create docker_pihole_networks"
   community.docker.docker_network:
     name: "{{ item.name }}"
     driver: bridge
   with_items: "{{ docker_pihole_networks }}"
+
+- name: Setup unbound container
+  include_tasks: unbound.yml
+  when: docker_pihole_unbound
 
 #- name: "Set the __docker_pihole_admin_password fact"
 #  set_fact:
@@ -108,5 +107,3 @@
   include_tasks: custom_hosts.yml
   when: docker_pihole_dns_custom_hosts | length > 0
 
-- name: Setup unbound container
-  when: docker_pihole_unbound
