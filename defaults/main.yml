@@ -32,6 +32,8 @@ docker_pihole_dns_servers: "127.0.0.1; 1.1.1.1"
 docker_pihole_traefik: true
 docker_pihole_traefik_host: "pihole5.duckdns.org"
 
+docker_pihole_ipv4_address: "172.18.0.3"
+
 docker_pihole_unbound: false
 unbound_ip: "172.200.200.5"
 unbound_net_config:

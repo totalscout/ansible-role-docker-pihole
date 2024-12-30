@@ -3,7 +3,16 @@
   community.docker.docker_network:
     name: "{{ item.name }}"
     driver: bridge
+    ipam_config: "{{ [{'subnet': item.subnet}] if item.subnet is defined else omit }}"
   with_items: "{{ docker_pihole_networks }}"
+
+- name: Debug network information
+  debug:
+    msg: "Network configuration: {{ docker_pihole_networks }}"
+
+- name: Debug ipv4_address
+  debug:
+    msg: "IPv4 address: {{ docker_pihole_ipv4_address }}"
 
 - name: Setup unbound container
   include_tasks: unbound.yml
@@ -22,7 +31,10 @@
     restart: yes
     restart_policy: unless-stopped
     networks_cli_compatible: yes
-    networks: "{{ docker_pihole_networks }}"
+    networks:
+      - name: "{{ docker_pihole_networks[0].name }}"
+      - name: "{{ docker_pihole_networks[1].name }}"
+        ipv4_address: "{{ docker_pihole_ipv4_address }}"
     ports:
       - 53:53/udp
       - 53:53/tcp
@@ -33,7 +45,7 @@
       ServerIP: "{{ docker_pihole_ipv4_address }}"
       INTERFACE: "{{ docker_pihole_network_interface }}"
       WEBPASSWORD: "{{ docker_pihole_admin_password }}"
-      PIHOLE_DNS_: "{{ docker_pihole_dns_servers }};{{ unbound_ip }}"
+      PIHOLE_DNS_: "{{ docker_pihole_dns_servers }}"
     labels:
       traefik.enable: "true"
       traefik.http.routers.pihole.rule: "(Host(`{{ docker_pihole_traefik_host }}`))"
@@ -45,9 +57,9 @@
       traefik.http.services.pihole.loadbalancer.server.port: "80"
     capabilities: NET_ADMIN
     dns_servers: "{{ docker_pihole_dns_servers }}"
-  when: (docker_pihole_traefik == true) and (docker_pihole_unbound == true)
+  when: (docker_pihole_traefik == true) and (docker_pihole_unbound == false)
 
-- name: "[docker] Setup the pi-hole docker container with Traefik"
+- name: "[docker] Setup the pi-hole docker container"
   docker_container:
     name: "{{ docker_pihole_container_name }}"
     image: "{{ docker_pihole_image_name }}"
@@ -55,7 +67,10 @@
     restart: yes
     restart_policy: unless-stopped
     networks_cli_compatible: yes
-    networks: "{{ docker_pihole_networks }}"
+    networks:
+      - name: "{{ docker_pihole_networks[0].name }}"
+      - name: "{{ docker_pihole_networks[1].name }}"
+        ipv4_address: "{{ docker_pihole_ipv4_address }}"
     ports:
       - 53:53/udp
       - 53:53/tcp
